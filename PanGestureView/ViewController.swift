@@ -41,16 +41,12 @@ class ViewController: UIViewController {
     action3.didTriggerBlock = { direction in
       self.actionDidTrigger(action: action3)
     }
-    
     swipeView.addAction(action: action3)
     
     let action4 = PanGestureAction(swipeDirection: .down, image: UIImage(named: "chevron-up")!)
     action4.backgroundColor = UIColor(red:0.96, green:0.7, blue:0.31, alpha:1)
-    action4.didTriggerBlock = {
-      direction in
-      
+    action4.didTriggerBlock = { direction in
       self.actionDidTrigger(action: action4)
-      
     }
     swipeView.addAction(action: action4)
   }

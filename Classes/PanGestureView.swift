@@ -14,12 +14,13 @@ public enum PanGestureViewSwipeDirection {
   case left
   case up
   case right
+  
+  var isHorizontal: Bool {
+    return self == .left || self == .right
+  }
 }
 
-let horizontalSwipeDirections: [PanGestureViewSwipeDirection] = [.left, .right]
-
 public class PanGestureView: UIView {
-  
   public var contentView: UIView!
   private var actions: [PanGestureViewSwipeDirection: PanGestureAction] = [:]
   private var actionViews: [PanGestureViewSwipeDirection: PanGestureActionView] = [:]
@@ -58,7 +59,7 @@ public class PanGestureView: UIView {
 
     actions[direction] = action
     
-    if let existingActionView = actionViews[direction]{
+    if let existingActionView = actionViews[direction] {
       existingActionView.removeFromSuperview()
     }
     
@@ -74,7 +75,7 @@ public class PanGestureView: UIView {
   func addConstraintsToActionView(actionView: PanGestureActionView, direction: PanGestureViewSwipeDirection) {
     let views: [String: UIView] = ["view": actionView, "contentView": contentView]
     
-    let orientation1 = (horizontalSwipeDirections.contains(direction)) ? "H" : "V"
+    let orientation1 = direction.isHorizontal ? "H" : "V"
     let orientation2 = (orientation1 == "H") ? "V" : "H"
     
     let constraint: String
@@ -193,13 +194,11 @@ extension PanGestureView: UIGestureRecognizerDelegate {
     self.layoutIfNeeded()
   }
   
-  private func updatePosition(translation:CGPoint){
-    
-    if horizontalSwipeDirections.contains(swipeDirection){
+  private func updatePosition(translation:CGPoint) {
+    if swipeDirection.isHorizontal {
       let elasticTranslation = elasticPoint(x: Float(translation.x), li: 44, lf: 100)
       contentView.center.x = contentView.frame.size.width / 2 + CGFloat(elasticTranslation)
-    }
-    else {
+    } else {
       let elasticTranslation = elasticPoint(x: Float(translation.y), li: 44, lf: 100)
       contentView.center.y = contentView.frame.size.height / 2 + CGFloat(elasticTranslation)
     }
@@ -224,24 +223,19 @@ extension PanGestureView: UIGestureRecognizerDelegate {
     
   }
   
-  private func swipeDirectionForTranslation(translation:CGPoint, velocity: CGPoint) -> PanGestureViewSwipeDirection {
+  private func swipeDirectionForTranslation(translation: CGPoint, velocity: CGPoint) -> PanGestureViewSwipeDirection {
     if velocity.x == 0 && velocity.y == 0 {
       return .none
     }
     
-    var isHorizontal: Bool = false
     if abs(velocity.x) > abs(velocity.y) {
-      
-      isHorizontal = true
-      
-    }
-    if isHorizontal {
+      // Horizontal swipe
       if translation.x > 0 {
         return .right
       }
       return .left
     }
-    
+
     if translation.y > 0 {
       return .down
     }
@@ -250,7 +244,7 @@ extension PanGestureView: UIGestureRecognizerDelegate {
   }
   
   func elasticPoint(x: Float, li: Float, lf: Float) -> Float {
-    if (abs(x) >= abs(li)) {
+    if abs(x) >= abs(li) {
       return atanf(tanf((Float.pi * li) / (2 * lf)) * (x / li)) * (2 * lf / Float.pi)
     } else {
       return x
@@ -258,7 +252,8 @@ extension PanGestureView: UIGestureRecognizerDelegate {
   }
 }
 
-let kMinimumTranslation: CGFloat = 15
+fileprivate let MinimumTranslation: CGFloat = 15
+
 class PanGestureActionView: UIView {
   var imageView: UIImageView = UIImageView(frame: .zero)
   var action: PanGestureAction!
@@ -296,7 +291,7 @@ class PanGestureActionView: UIView {
   private func setupConstraints() {
     let views: [String: UIView] = ["imageView": imageView]
     
-    let orientation1 = (horizontalSwipeDirections.contains(self.action.swipeDirection)) ? "H" : "V"
+    let orientation1 = self.action.swipeDirection.isHorizontal ? "H" : "V"
     let orientation2 = (orientation1 == "H") ? "V" : "H"
     
     let hConstraintString = "\(orientation1):|-(0@250)-[imageView(<=44)]-(0@250)-|"
@@ -318,15 +313,14 @@ class PanGestureActionView: UIView {
   override func layoutSubviews() {
     super.layoutSubviews()
     
-    let length = (horizontalSwipeDirections.contains(self.action.swipeDirection)) ? self.frame.size.width : self.frame.size.height
-    let imageViewLength = (horizontalSwipeDirections.contains(self.action.swipeDirection)) ? self.imageView.frame.size.width : self.imageView.frame.size.height
+    let length = self.action.swipeDirection.isHorizontal ? self.frame.size.width : self.frame.size.height
+    let imageViewLength = self.action.swipeDirection.isHorizontal ? self.imageView.frame.size.width : self.imageView.frame.size.height
     
     if length > imageViewLength {
-      let origin = (horizontalSwipeDirections.contains(self.action.swipeDirection)) ? self.bounds.origin.x : self.bounds.origin.y
-      let imageViewOrigin = (horizontalSwipeDirections.contains(self.action.swipeDirection)) ? self.imageView.frame.origin.x : self.imageView.frame.origin.y
-      imageView.alpha = (origin + imageViewOrigin)/kMinimumTranslation
-    }
-    else {
+      let origin = self.action.swipeDirection.isHorizontal ? self.bounds.origin.x : self.bounds.origin.y
+      let imageViewOrigin = self.action.swipeDirection.isHorizontal ? self.imageView.frame.origin.x : self.imageView.frame.origin.y
+      imageView.alpha = (origin + imageViewOrigin) / MinimumTranslation
+    } else {
       imageView.alpha = 0
     }
     
