@@ -127,7 +127,8 @@ extension PanGestureView: UIGestureRecognizerDelegate {
       if let actionView = self.actionViews[self.swipeDirection], let action = self.actions[self.swipeDirection], actionView.shouldTrigger  {
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1, options: [.curveEaseOut, .allowUserInteraction], animations: { () -> Void in
           self.resetView()
-        }, completion: { (finished) -> Void in
+          actionView.transform = .identity
+        }, completion: { finished in
           if finished {
             action.didTriggerBlock?(self.swipeDirection)
           }
@@ -212,8 +213,7 @@ extension PanGestureView: UIGestureRecognizerDelegate {
         UIView.animate(withDuration: 0.4, delay: 0, options: [.curveEaseInOut, .allowUserInteraction], animations: { () -> Void in
           actionView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
         }, completion: nil)
-      }
-      else {
+      } else {
         actionView.shouldTrigger = false
         UIView.animate(withDuration: 0.4, delay: 0, options: [.curveEaseInOut, .allowUserInteraction], animations: { () -> Void in
           actionView.transform = .identity
